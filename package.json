@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npm link reactive-synth-bitcrusher reactive-synth-envelope-generator"
   },
   "dependencies": {
     "@types/node": "20.2.5",
