@@ -1,5 +1,6 @@
 "use client";
 import { MidiEvent, midiEventFromBytes } from "@/lib/midi-input";
+import { handleMidiEvent, initializeSignalChain, startAudioContext, stopAudioContext } from "@/lib/signal-chain";
 import { ChangeEvent, useEffect, useState } from "react";
 
 export const MidiInputSelector = ({}) => {
@@ -7,6 +8,7 @@ export const MidiInputSelector = ({}) => {
   const [selectedInstrumentId, setSelectedInstrumentId] = useState("");
   const [inputChannel, setInputChannel] = useState(1);
   const [midiEvent, setMidiEvent] = useState({} as MidiEvent);
+  const [isSoundOn, setSoundOn] = useState(false);
   useEffect(() => {
     navigator.requestMIDIAccess().then(
       (midi) => {
@@ -20,6 +22,7 @@ export const MidiInputSelector = ({}) => {
         } else if (inputs?.[0]?.id) {
           selectInstrumentById(inputs[0].id, inputs);
         }
+        initializeSignalChain();
       },
       (failure) => {
         console.error("could not connect to midi devices", failure);
@@ -34,7 +37,9 @@ export const MidiInputSelector = ({}) => {
     localStorage.setItem("selectedMidiInputId", id);
     if (selectedInput)
       selectedInput.onmidimessage = (event) => {
-        setMidiEvent(midiEventFromBytes((event as MIDIMessageEvent).data));
+        const parsedEvent = midiEventFromBytes((event as MIDIMessageEvent).data)
+        setMidiEvent(parsedEvent);
+        handleMidiEvent(parsedEvent, inputChannel);
       };
     setSelectedInstrumentId(id);
   };
@@ -43,10 +48,17 @@ export const MidiInputSelector = ({}) => {
   };
   const selectInputChannel = (e: ChangeEvent<HTMLInputElement>) => {
     const inputValue = +e.target.value;
-    if (inputValue >= 1 && inputValue <= 16){
-      setInputChannel(inputValue)
+    if (inputValue >= 1 && inputValue <= 16) {
+      setInputChannel(inputValue);
     }
-  }
+  };
+  const toggleMute = (_) => {
+    if (isSoundOn) {
+      stopAudioContext().then(() => setSoundOn(false));
+    } else {
+      startAudioContext().then(() => setSoundOn(true));
+    }
+  };
   return (
     <div>
       <label>
@@ -64,7 +76,22 @@ export const MidiInputSelector = ({}) => {
         </select>
       </label>
       <label>
-        Listen to channel: <input className="bg-black" type="number" name="inputChannel" id="" value={inputChannel} min="1" max="16" onChange={selectInputChannel} />
+        Listen to channel:
+        <input
+          className="ml-2 bg-black"
+          type="number"
+          name="inputChannel"
+          id="input-channel"
+          value={inputChannel}
+          min="1"
+          max="16"
+          onChange={selectInputChannel}
+        />
+      </label>
+      <label>
+        <button type="button" onClick={toggleMute}>
+          {isSoundOn ? "mute" : "unmute"}
+        </button>
       </label>
 
       <h2>Last MIDI event:</h2>

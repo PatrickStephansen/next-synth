@@ -63,6 +63,6 @@ export const midiEventFromBytes = (eventData: Uint8Array): MidiEvent => {
     raw: eventData,
   };
 };
-// A4 = 440Hz = key 48
+// A4 = 440Hz = key 69
 export const keyNumberToOffsetInCents = (keyNumber: number) =>
-  (keyNumber - 48) * 100;
+  (keyNumber - 69) * 100;
