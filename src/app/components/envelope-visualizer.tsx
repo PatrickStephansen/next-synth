@@ -50,7 +50,7 @@ export const EnvelopeVisualizer = ({
             ? state.parameters.attackTime + state.parameters.holdTime + state.parameters.decayTime + state.stageProgress
             : state.stage === 'release'
             ? state.parameters.attackTime + state.parameters.holdTime + state.parameters.decayTime + 1 + state.stageProgress * state.parameters.releaseTime
-            : 0
+            : -1
         };
         // keys needs to be reassigned at least once in the loop for change detection to work, so we can't just set a specific elemement.
         keys = keys
@@ -67,6 +67,7 @@ export const EnvelopeVisualizer = ({
       voices.forEach((v) => v.envelopes[envelopeType].requestState());
       requestAnimationFrame(nextFrame);
     };
+    nextFrame();
   }, [voices, envelopeType]);
 
   return (

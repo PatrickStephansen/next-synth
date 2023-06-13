@@ -1,6 +1,6 @@
 "use client";
 import { MidiEvent, midiEventFromBytes } from "@/lib/midi-input";
-import { handleMidiEvent, initializeSignalChain, startAudioContext, stopAudioContext } from "@/lib/signal-chain";
+import { handleMidiEvent, startAudioContext, stopAudioContext } from "@/lib/signal-chain";
 import { ChangeEvent, useEffect, useState } from "react";
 
 export const MidiInputSelector = ({}) => {
@@ -22,7 +22,6 @@ export const MidiInputSelector = ({}) => {
         } else if (inputs?.[0]?.id) {
           selectInstrumentById(inputs[0].id, inputs);
         }
-        initializeSignalChain();
       },
       (failure) => {
         console.error("could not connect to midi devices", failure);
@@ -52,7 +51,7 @@ export const MidiInputSelector = ({}) => {
       setInputChannel(inputValue);
     }
   };
-  const toggleMute = (_) => {
+  const toggleMute = () => {
     if (isSoundOn) {
       stopAudioContext().then(() => setSoundOn(false));
     } else {

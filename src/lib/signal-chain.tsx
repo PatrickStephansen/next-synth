@@ -6,7 +6,7 @@
 import { MidiEvent, keyNumberToOffsetInCents } from "./midi-input";
 
 const OSCILLATOR_POOL_SIZE = 20;
-export const oscillatorPool: Voice[] = [];
+const oscillatorPool: Voice[] = [];
 
 const audioContext = new AudioContext();
 
@@ -17,12 +17,12 @@ export interface EnvelopeParameters {
   decayTime: number;
   sustainValue: number;
   releaseTime: number;
-};
+}
 export interface EnvelopState {
   stage: "rest" | "attack" | "hold" | "decay" | "sustain" | "release";
   stageProgress: number;
   outputValue: number;
-  parameters: EnvelopeParameters
+  parameters: EnvelopeParameters;
 }
 
 export interface EnvelopeDetails {
@@ -39,7 +39,7 @@ export interface Voice {
   isBusy: boolean;
   lastInvocationTime: number;
   note?: number;
-  envelopes: {gain: EnvelopeDetails};
+  envelopes: { gain: EnvelopeDetails };
 }
 
 const createModuleReadyPromise = (port: MessagePort) =>
@@ -105,7 +105,7 @@ export const initializeSignalChain = async () => {
             callback: (state: EnvelopState) => void
           ) => {
             envelopeGeneratorNode.port.onmessage = (event: MessageEvent) => {
-              if (event.type === "state") {
+              if (event.data.type === "state") {
                 callback(event.data.state);
               }
             };
@@ -114,6 +114,7 @@ export const initializeSignalChain = async () => {
       },
     });
   }
+  return oscillatorPool;
 };
 
 export const startAudioContext = audioContext.resume.bind(audioContext);
@@ -157,7 +158,9 @@ export const handleMidiEvent = (
       setTimeout(() => {
         ringingNote.isBusy = false;
       }, ringingNote.envelopes.gain.processingNode.parameters.get("release")?.value ?? 0 * 1000);
-      ringingNote.envelopes.gain.processingNode.parameters.get("trigger")?.setValueAtTime(0, 0);
+      ringingNote.envelopes.gain.processingNode.parameters
+        .get("trigger")
+        ?.setValueAtTime(0, 0);
     }
   }
 };
