@@ -6,17 +6,40 @@
 import { MidiEvent, keyNumberToOffsetInCents } from "./midi-input";
 
 const OSCILLATOR_POOL_SIZE = 20;
-const oscillatorPool: Voice[] = [];
+export const oscillatorPool: Voice[] = [];
 
 const audioContext = new AudioContext();
 
-interface Voice {
+export interface EnvelopeParameters {
+  attackValue: number;
+  attackTime: number;
+  holdTime: number;
+  decayTime: number;
+  sustainValue: number;
+  releaseTime: number;
+};
+export interface EnvelopState {
+  stage: "rest" | "attack" | "hold" | "decay" | "sustain" | "release";
+  stageProgress: number;
+  outputValue: number;
+  parameters: EnvelopeParameters
+}
+
+export interface EnvelopeDetails {
+  processingNode: AudioWorkletNode;
+  requestState: () => void;
+  setEnvelopeStateUpdateCallback: (
+    callback: (state: EnvelopState) => void
+  ) => void;
+}
+
+export interface Voice {
   oscillator: OscillatorNode;
   gain: GainNode;
-  envelopeGeneratorNode: AudioWorkletNode;
   isBusy: boolean;
   lastInvocationTime: number;
   note?: number;
+  envelopes: {gain: EnvelopeDetails};
 }
 
 const createModuleReadyPromise = (port: MessagePort) =>
@@ -62,6 +85,9 @@ export const initializeSignalChain = async () => {
     });
     envelopeGeneratorNode.port.start();
     await createModuleReadyPromise(envelopeGeneratorNode.port);
+    const getState = () => {
+      envelopeGeneratorNode.port.postMessage({ type: "get-state" });
+    };
     oscillator.connect(gain);
     gain.connect(audioContext.destination);
     envelopeGeneratorNode.connect(gain.gain);
@@ -69,9 +95,23 @@ export const initializeSignalChain = async () => {
     oscillatorPool.push({
       oscillator,
       gain,
-      envelopeGeneratorNode,
       isBusy: false,
       lastInvocationTime: 0,
+      envelopes: {
+        gain: {
+          processingNode: envelopeGeneratorNode,
+          requestState: getState,
+          setEnvelopeStateUpdateCallback: (
+            callback: (state: EnvelopState) => void
+          ) => {
+            envelopeGeneratorNode.port.onmessage = (event: MessageEvent) => {
+              if (event.type === "state") {
+                callback(event.data.state);
+              }
+            };
+          },
+        },
+      },
     });
   }
 };
@@ -99,13 +139,13 @@ export const handleMidiEvent = (
       keyNumberToOffsetInCents(eventData?.keyNumber ?? 48),
       0
     );
-    firstFreeOscillator.envelopeGeneratorNode.parameters
+    firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("trigger")
       ?.setValueAtTime(eventData.velocity, 0);
-    firstFreeOscillator.envelopeGeneratorNode.parameters
+    firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("attackValue")
       ?.setValueAtTime(eventData.velocity, 0);
-    firstFreeOscillator.envelopeGeneratorNode.parameters
+    firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("sustainValue")
       ?.setValueAtTime(eventData.velocity / 4, 0);
   }
@@ -114,10 +154,10 @@ export const handleMidiEvent = (
       .sort((a, b) => b.lastInvocationTime - a.lastInvocationTime)
       .find((o) => o.note == eventData.keyNumber);
     if (ringingNote) {
-      ringingNote.isBusy = false;
-      ringingNote.envelopeGeneratorNode.parameters
-        .get("trigger")
-        ?.setValueAtTime(0, 0);
+      setTimeout(() => {
+        ringingNote.isBusy = false;
+      }, ringingNote.envelopes.gain.processingNode.parameters.get("release")?.value ?? 0 * 1000);
+      ringingNote.envelopes.gain.processingNode.parameters.get("trigger")?.setValueAtTime(0, 0);
     }
   }
 };
