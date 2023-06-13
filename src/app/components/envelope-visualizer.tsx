@@ -40,17 +40,28 @@ export const EnvelopeVisualizer = ({
           stageProgress: state.stageProgress,
           name: v.note,
           key: voiceIndex,
-          totalProgress: state.stage === 'attack'
-            ? state.stageProgress * state.parameters.attackTime
-            : state.stage === 'hold'
-            ? state.parameters.attackTime + state.stageProgress * state.parameters.holdTime
-            : state.stage === 'decay'
-            ? state.parameters.attackTime + state.parameters.holdTime + state.stageProgress * state.parameters.decayTime
-            : state.stage === 'sustain'
-            ? state.parameters.attackTime + state.parameters.holdTime + state.parameters.decayTime + state.stageProgress
-            : state.stage === 'release'
-            ? state.parameters.attackTime + state.parameters.holdTime + state.parameters.decayTime + 1 + state.stageProgress * state.parameters.releaseTime
-            : -1
+          totalProgress:
+            state.stage === "attack"
+              ? state.stageProgress * state.parameters.attackTime
+              : state.stage === "hold"
+              ? state.parameters.attackTime +
+                state.stageProgress * state.parameters.holdTime
+              : state.stage === "decay"
+              ? state.parameters.attackTime +
+                state.parameters.holdTime +
+                state.stageProgress * state.parameters.decayTime
+              : state.stage === "sustain"
+              ? state.parameters.attackTime +
+                state.parameters.holdTime +
+                state.parameters.decayTime +
+                state.stageProgress
+              : state.stage === "release"
+              ? state.parameters.attackTime +
+                state.parameters.holdTime +
+                state.parameters.decayTime +
+                1 +
+                state.stageProgress * state.parameters.releaseTime
+              : -1,
         };
         // keys needs to be reassigned at least once in the loop for change detection to work, so we can't just set a specific elemement.
         keys = keys
@@ -158,19 +169,24 @@ export const EnvelopeVisualizer = ({
           y1={1 - envelopeParams.sustainValue}
           y2="1"
         ></line>
-        {activeKeys.map((k) => (
-          <line
-            key={k.key}
-            className="stroke-white stroke-1"
-            strokeLinecap="round"
-            shapeRendering="crisp-edges"
-            vectorEffect="non-scaling-stroke"
-            x1={k.totalProgress}
-            x2={k.totalProgress}
-            y1="0"
-            y2="1"
-          ></line>
-        ))}
+        {activeKeys
+          .filter((k) => k.stage !== "rest")
+          .map((k, i) => (
+            <g key={k.key} className="stroke-white stroke-1">
+              <line
+                strokeLinecap="round"
+                shapeRendering="crisp-edges"
+                vectorEffect="non-scaling-stroke"
+                x1={k.totalProgress}
+                x2={k.totalProgress}
+                y1="0"
+                y2="1"
+              ></line>
+              <text x={k.totalProgress} y={i / activeKeys.length}>
+                {k.name}
+              </text>
+            </g>
+          ))}
       </svg>
     </div>
   );
