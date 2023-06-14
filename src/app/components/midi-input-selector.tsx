@@ -58,13 +58,6 @@ export const MidiInputSelector = ({}) => {
       setInputChannel(inputValue);
     }
   };
-  const toggleMute = () => {
-    if (isSoundOn) {
-      stopAudioContext().then(() => setSoundOn(false));
-    } else {
-      startAudioContext().then(() => setSoundOn(true));
-    }
-  };
   return (
     <div>
       <label>
@@ -93,15 +86,6 @@ export const MidiInputSelector = ({}) => {
           max="16"
           onChange={selectInputChannel}
         />
-      </label>
-      <label>
-        <button
-          className="rounded border border-white m-2 p-2"
-          type="button"
-          onClick={toggleMute}
-        >
-          {isSoundOn ? "mute" : "unmute"}
-        </button>
       </label>
       <label>
         <input

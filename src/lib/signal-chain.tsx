@@ -59,7 +59,6 @@ const createModuleReadyPromise = (port: MessagePort) =>
   );
 
 export const initializeSignalChain = async () => {
-  await audioContext.suspend();
   await audioContext.audioWorklet.addModule("/worklets/envelope-generator.js");
   const envelopeGeneratorBinaryResponse = await fetch(
     "/worklets/reactive_synth_envelope_generator.wasm"
@@ -121,6 +120,7 @@ export const initializeSignalChain = async () => {
 
 export const startAudioContext = audioContext.resume.bind(audioContext);
 export const stopAudioContext = audioContext.suspend.bind(audioContext);
+export const getAudioContextActive = () => audioContext.state === "running";
 
 export const handleMidiEvent = (
   eventData: MidiEvent,
@@ -162,6 +162,16 @@ export const handleMidiEvent = (
 };
 
 export const setMasterGain = (gain: number) => {
+  if (audioContext.state !== "running") {
+    audioContext
+      .resume()
+      .catch((e) =>
+        console.error(
+          "There's a problem with the audio context. Couldn't resume it.",
+          e
+        )
+      );
+  }
   masterGain.gain.linearRampToValueAtTime(
     gain,
     audioContext.currentTime + 0.01
