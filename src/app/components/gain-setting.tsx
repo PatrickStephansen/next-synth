@@ -29,7 +29,7 @@ export const GainSetting = ({ setGain, name, defaultGain }: Props) => (
     />
     <datalist id={idFriendlyName(name) + "-gain-list"}>
       <option value="0" label="off"></option>
-      <option value="0.25" label="recommended"></option>
+      <option value="0.2" label="recommended"></option>
       <option value="1" label="full"></option>
     </datalist>
   </label>

@@ -120,7 +120,6 @@ export const initializeSignalChain = async () => {
 
 export const startAudioContext = audioContext.resume.bind(audioContext);
 export const stopAudioContext = audioContext.suspend.bind(audioContext);
-export const getAudioContextActive = () => audioContext.state === "running";
 
 export const handleMidiEvent = (
   eventData: MidiEvent,
@@ -176,4 +175,10 @@ export const setMasterGain = (gain: number) => {
     gain,
     audioContext.currentTime + 0.01
   );
+};
+
+export const setOscillatorPoolWaveForm = (
+  waveForm: string
+) => {
+  oscillatorPool.forEach((o) => (o.oscillator.type = waveForm));
 };

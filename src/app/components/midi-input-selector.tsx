@@ -4,14 +4,14 @@ import {
   startAudioContext,
   stopAudioContext,
 } from "@/lib/signal-chain";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { Select, Option } from "./select";
 
 export const MidiInputSelector = ({}) => {
   const [instruments, setInstruments] = useState([] as MIDIInput[]);
   const [selectedInstrumentId, setSelectedInstrumentId] = useState("");
   const [inputChannel, setInputChannel] = useState(1);
   const [midiEvent, setMidiEvent] = useState({} as MidiEvent);
-  const [isSoundOn, setSoundOn] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   useEffect(() => {
     navigator.requestMIDIAccess().then(
@@ -49,8 +49,8 @@ export const MidiInputSelector = ({}) => {
     setSelectedInstrumentId(id);
   };
 
-  const selectInstrument = (e: ChangeEvent<HTMLSelectElement>) => {
-    selectInstrumentById(e.target.value, instruments);
+  const selectInstrument = (value: string) => {
+    selectInstrumentById(value, instruments);
   };
   const selectInputChannel = (e: ChangeEvent<HTMLInputElement>) => {
     const inputValue = +e.target.value;
@@ -58,22 +58,18 @@ export const MidiInputSelector = ({}) => {
       setInputChannel(inputValue);
     }
   };
+  const instrumentOptions = useMemo(
+    () => instruments.map((i) => ({ value: i.id, displayName: i.name })),
+    [instruments]
+  ) as Option[];
   return (
     <div>
-      <label>
-        Input:
-        <select
-          className="m-2 p-2 bg-black border rounded"
-          onChange={selectInstrument}
-          value={selectedInstrumentId}
-        >
-          {instruments.map((instrument) => (
-            <option value={instrument.id} key={instrument.id}>
-              {instrument.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Select
+        label="MIDI input device"
+        onChange={selectInstrument}
+        value={selectedInstrumentId}
+        options={instrumentOptions}
+      />
       <label>
         Listen to channel:
         <input
