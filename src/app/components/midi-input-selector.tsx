@@ -1,6 +1,10 @@
 "use client";
 import { MidiEvent, midiEventFromBytes } from "@/lib/midi-input";
-import { handleMidiEvent, startAudioContext, stopAudioContext } from "@/lib/signal-chain";
+import {
+  handleMidiEvent,
+  startAudioContext,
+  stopAudioContext,
+} from "@/lib/signal-chain";
 import { ChangeEvent, useEffect, useState } from "react";
 
 export const MidiInputSelector = ({}) => {
@@ -9,6 +13,7 @@ export const MidiInputSelector = ({}) => {
   const [inputChannel, setInputChannel] = useState(1);
   const [midiEvent, setMidiEvent] = useState({} as MidiEvent);
   const [isSoundOn, setSoundOn] = useState(false);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   useEffect(() => {
     navigator.requestMIDIAccess().then(
       (midi) => {
@@ -36,7 +41,9 @@ export const MidiInputSelector = ({}) => {
     localStorage.setItem("selectedMidiInputId", id);
     if (selectedInput)
       selectedInput.onmidimessage = (event) => {
-        const parsedEvent = midiEventFromBytes((event as MIDIMessageEvent).data)
+        const parsedEvent = midiEventFromBytes(
+          (event as MIDIMessageEvent).data
+        );
         setMidiEvent(parsedEvent);
         handleMidiEvent(parsedEvent, inputChannel);
       };
@@ -63,7 +70,7 @@ export const MidiInputSelector = ({}) => {
       <label>
         Input:
         <select
-          className="ml-2 bg-black"
+          className="m-2 p-2 bg-black border rounded"
           onChange={selectInstrument}
           value={selectedInstrumentId}
         >
@@ -77,7 +84,7 @@ export const MidiInputSelector = ({}) => {
       <label>
         Listen to channel:
         <input
-          className="ml-2 bg-black"
+          className="m-2 p-2 bg-black border rounded"
           type="number"
           name="inputChannel"
           id="input-channel"
@@ -88,24 +95,38 @@ export const MidiInputSelector = ({}) => {
         />
       </label>
       <label>
-        <button type="button" onClick={toggleMute}>
+        <button className="rounded border border-white m-2 p-2" type="button" onClick={toggleMute}>
           {isSoundOn ? "mute" : "unmute"}
         </button>
       </label>
+      <label>
+        <input
+          type="checkbox"
+          className="m-2"
+          onChange={(e) => setShowDebugInfo(e.target.checked)}
+        />
+        Show debug info
+      </label>
 
-      <h2>Last MIDI event:</h2>
-      <dl>
-        <dt>channel</dt>
-        <dd>{midiEvent.channel}</dd>
-        <dt>event</dt>
-        <dd>{midiEvent.eventType}</dd>
-        <dt>key number</dt>
-        <dd>{midiEvent.keyNumber}</dd>
-        <dt>velocity</dt>
-        <dd>{midiEvent.velocity}</dd>
-        <dt>raw</dt>
-        <dd>{midiEvent.raw?.toString()}</dd>
-      </dl>
+      {showDebugInfo ? (
+        <div>
+          <h2>Last MIDI event:</h2>
+          <dl>
+            <dt>channel</dt>
+            <dd>{midiEvent.channel}</dd>
+            <dt>event</dt>
+            <dd>{midiEvent.eventType}</dd>
+            <dt>key number</dt>
+            <dd>{midiEvent.keyNumber}</dd>
+            <dt>velocity</dt>
+            <dd>{midiEvent.velocity}</dd>
+            <dt>raw</dt>
+            <dd>{midiEvent.raw?.toString()}</dd>
+          </dl>
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 };
