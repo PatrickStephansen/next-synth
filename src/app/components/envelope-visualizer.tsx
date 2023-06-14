@@ -1,6 +1,6 @@
 "use client";
 import { keyNumberToNoteName } from "@/lib/midi-input";
-import { EnvelopState, EnvelopeParameters, Voice } from "@/lib/signal-chain";
+import { EnvelopeParameters, Voice } from "@/lib/signal-chain";
 import { useEffect, useState } from "react";
 
 const height = 200;
@@ -12,6 +12,7 @@ interface KeyEnvelopState {
   totalProgress: number;
   keyNumber: number;
   noteName: string;
+  velocity: number;
   key: string;
 }
 
@@ -42,7 +43,8 @@ export const EnvelopeVisualizer = ({
           stageProgress: state.stageProgress,
           keyNumber: v.note,
           noteName: v.note == null ? "no pitch" : keyNumberToNoteName(v.note),
-          key: voiceIndex,
+          key: voiceIndex.toString(),
+          velocity: state.outputValue,
           totalProgress:
             state.stage === "attack"
               ? state.stageProgress * state.parameters.attackTime
@@ -65,7 +67,7 @@ export const EnvelopeVisualizer = ({
                 1 +
                 state.stageProgress * state.parameters.releaseTime
               : -1,
-        };
+        } as KeyEnvelopState;
         // keys needs to be reassigned at least once in the loop for change detection to work, so we can't just set a specific elemement.
         keys = keys
           .slice(0, voiceIndex)
@@ -85,7 +87,7 @@ export const EnvelopeVisualizer = ({
   }, [voices, envelopeType]);
 
   return (
-    <div className="flex">
+    <div className="grid grid-cols-2 gap-4 place-content-center">
       <svg
         version="1.2"
         viewBox={`0 0 ${
@@ -185,6 +187,12 @@ export const EnvelopeVisualizer = ({
                 y1="0"
                 y2="1"
               ></line>
+              <circle
+                vectorEffect="non-scaling-stroke"
+                cx={k.totalProgress}
+                cy={1 - k.velocity}
+                r="1%"
+              ></circle>
             </g>
           ))}
       </svg>
