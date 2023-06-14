@@ -1,4 +1,5 @@
 "use client";
+import { keyNumberToNoteName } from "@/lib/midi-input";
 import { EnvelopState, EnvelopeParameters, Voice } from "@/lib/signal-chain";
 import { useEffect, useState } from "react";
 
@@ -9,7 +10,8 @@ interface KeyEnvelopState {
   stage: "rest" | "attack" | "hold" | "decay" | "sustain" | "release";
   stageProgress: number;
   totalProgress: number;
-  name: string;
+  keyNumber: number;
+  noteName: string;
   key: string;
 }
 
@@ -38,7 +40,8 @@ export const EnvelopeVisualizer = ({
         const keyState = {
           stage: state.stage,
           stageProgress: state.stageProgress,
-          name: v.note,
+          keyNumber: v.note,
+          noteName: v.note == null ? "no pitch" : keyNumberToNoteName(v.note),
           key: voiceIndex,
           totalProgress:
             state.stage === "attack"
@@ -171,7 +174,7 @@ export const EnvelopeVisualizer = ({
         ></line>
         {activeKeys
           .filter((k) => k.stage !== "rest")
-          .map((k, i) => (
+          .map((k) => (
             <g key={k.key} className="stroke-white stroke-1">
               <line
                 strokeLinecap="round"
@@ -182,12 +185,21 @@ export const EnvelopeVisualizer = ({
                 y1="0"
                 y2="1"
               ></line>
-              <text x={k.totalProgress} y={i / activeKeys.length}>
-                {k.name}
-              </text>
             </g>
           ))}
       </svg>
+      <div>
+        <h2>Inputs</h2>
+        <ul>
+          {activeKeys
+            .filter((k) => k.stage !== "rest")
+            .map((k) => (
+              <li key={k.key}>
+                {k.keyNumber}: {k.noteName}
+              </li>
+            ))}
+        </ul>
+      </div>
     </div>
   );
 };

@@ -66,3 +66,7 @@ export const midiEventFromBytes = (eventData: Uint8Array): MidiEvent => {
 // A4 = 440Hz = key 69
 export const keyNumberToOffsetInCents = (keyNumber: number) =>
   (keyNumber - 69) * 100;
+
+export const keyNumberToNoteName = (keyNumber: number) =>
+  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][keyNumber % 12] +
+  (Math.floor(keyNumber / 12) - 2);
