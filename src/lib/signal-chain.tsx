@@ -9,6 +9,8 @@ const OSCILLATOR_POOL_SIZE = 20;
 const oscillatorPool: Voice[] = [];
 
 const audioContext = new AudioContext();
+const masterGain = new GainNode(audioContext, { gain: 0.2 });
+masterGain.connect(audioContext.destination);
 
 export interface EnvelopeParameters {
   attackValue: number;
@@ -89,7 +91,7 @@ export const initializeSignalChain = async () => {
       envelopeGeneratorNode.port.postMessage({ type: "get-state" });
     };
     oscillator.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(masterGain);
     envelopeGeneratorNode.connect(gain.gain);
     oscillator.start();
     oscillatorPool.push({
@@ -142,13 +144,7 @@ export const handleMidiEvent = (
     );
     firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("trigger")
-      ?.setValueAtTime(eventData.velocity, 0);
-    firstFreeOscillator.envelopes.gain.processingNode.parameters
-      .get("attackValue")
-      ?.setValueAtTime(eventData.velocity, 0);
-    firstFreeOscillator.envelopes.gain.processingNode.parameters
-      .get("sustainValue")
-      ?.setValueAtTime(eventData.velocity / 4, 0);
+      ?.setValueAtTime(1, 0);
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
@@ -163,4 +159,11 @@ export const handleMidiEvent = (
         ?.setValueAtTime(0, 0);
     }
   }
+};
+
+export const setMasterGain = (gain: number) => {
+  masterGain.gain.linearRampToValueAtTime(
+    gain,
+    audioContext.currentTime + 0.01
+  );
 };
