@@ -1,4 +1,3 @@
-"use client";
 import { MidiEvent, midiEventFromBytes } from "@/lib/midi-input";
 import {
   handleMidiEvent,
@@ -49,6 +48,7 @@ export const MidiInputSelector = ({}) => {
       };
     setSelectedInstrumentId(id);
   };
+
   const selectInstrument = (e: ChangeEvent<HTMLSelectElement>) => {
     selectInstrumentById(e.target.value, instruments);
   };
@@ -95,7 +95,11 @@ export const MidiInputSelector = ({}) => {
         />
       </label>
       <label>
-        <button className="rounded border border-white m-2 p-2" type="button" onClick={toggleMute}>
+        <button
+          className="rounded border border-white m-2 p-2"
+          type="button"
+          onClick={toggleMute}
+        >
           {isSoundOn ? "mute" : "unmute"}
         </button>
       </label>

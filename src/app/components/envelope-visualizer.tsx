@@ -1,4 +1,3 @@
-"use client";
 import { keyNumberToNoteName } from "@/lib/midi-input";
 import { EnvelopeParameters, Voice } from "@/lib/signal-chain";
 import { useEffect, useState } from "react";

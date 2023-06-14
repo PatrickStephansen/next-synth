@@ -1,20 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
-import { EnvelopeVisualizer } from "./components/envelope-visualizer";
-import { MidiInputSelector } from "./components/midi-input-selector";
-import { Voice, initializeSignalChain, setMasterGain } from "@/lib/signal-chain";
-import { MasterGain } from "./components/master-gain";
-
+import dynamic from "next/dynamic";
+const SynthComponent = dynamic(
+  () =>
+    import("./components/polyphonic-midi-synth"),
+  { ssr: false }
+);
 export default function Home() {
-  const [oscillatorPool, setOscillatorPool] = useState([] as Voice[]);
-  useEffect(() => {
-    initializeSignalChain().then((op) => setOscillatorPool(op));
-  }, []);
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <MidiInputSelector />
-      <MasterGain setMasterGain={setMasterGain}/>
-      <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
-    </main>
-  );
+  return <SynthComponent />;
 }
