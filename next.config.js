@@ -7,14 +7,14 @@ const nextConfig = {
       ...config.plugins,
       new CopyWebpackPlugin({
         patterns: [
-          {
-            from: "node_modules/reactive-synth-bitcrusher/bitcrusher.js",
-            to: "../public/worklets",
-          },
-          {
-            from: "node_modules/reactive-synth-bitcrusher/reactive_synth_bitcrusher.wasm",
-            to: "../public/worklets",
-          },
+          // {
+          //   from: "node_modules/reactive-synth-bitcrusher/bitcrusher.js",
+          //   to: "../public/worklets",
+          // },
+          // {
+          //   from: "node_modules/reactive-synth-bitcrusher/reactive_synth_bitcrusher.wasm",
+          //   to: "../public/worklets",
+          // },
           {
             from: "node_modules/reactive-synth-envelope-generator/envelope-generator.js",
             to: "../public/worklets",
