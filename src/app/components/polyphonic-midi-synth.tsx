@@ -35,7 +35,12 @@ export default function PolyPhonicMidiSynth() {
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <MidiInputSelector />
       <GainSetting setGain={setMasterGain} name="Master Gain" defaultGain={0} />
-      <Select onChange={setOscillatorPoolWaveForms} label="Oscillator Waveform" options={waveFormOptions} value={waveform}/>
+      <Select
+        onChange={setOscillatorPoolWaveForms}
+        label="Oscillator Waveform"
+        options={waveFormOptions}
+        value={waveform}
+      />
       <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
     </main>
   );

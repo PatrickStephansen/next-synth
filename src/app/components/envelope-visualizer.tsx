@@ -11,7 +11,8 @@ interface KeyEnvelopState {
   totalProgress: number;
   keyNumber: number;
   noteName: string;
-  velocity: number;
+  outputVelocity: number;
+  keyVelocity: number;
   key: string;
 }
 
@@ -43,7 +44,8 @@ export const EnvelopeVisualizer = ({
           keyNumber: v.note,
           noteName: v.note == null ? "no pitch" : keyNumberToNoteName(v.note),
           key: voiceIndex.toString(),
-          velocity: state.outputValue,
+          outputVelocity: state.outputValue,
+          keyVelocity: v.envelopes[envelopeType].envelopeGain.gain.value,
           totalProgress:
             state.stage === "attack"
               ? state.stageProgress * state.parameters.attackTime
@@ -176,22 +178,13 @@ export const EnvelopeVisualizer = ({
         {activeKeys
           .filter((k) => k.stage !== "rest")
           .map((k) => (
-            <g key={k.key} className="stroke-white stroke-1">
-              <line
-                strokeLinecap="round"
-                shapeRendering="crisp-edges"
-                vectorEffect="non-scaling-stroke"
-                x1={k.totalProgress}
-                x2={k.totalProgress}
-                y1="0"
-                y2="1"
-              ></line>
+            <g key={k.key} className="stroke-white fill-white stroke-1">
               <circle
                 vectorEffect="non-scaling-stroke"
                 cx={k.totalProgress}
-                cy={1 - k.velocity}
-                r="1%"
-              ></circle>
+                cy={1 - k.outputVelocity}
+                r="2%"
+              />
             </g>
           ))}
       </svg>
@@ -203,6 +196,12 @@ export const EnvelopeVisualizer = ({
             .map((k) => (
               <li key={k.key}>
                 {k.keyNumber}: {k.noteName}
+                <meter
+                  className="mx-2 border rounded"
+                  min="0"
+                  max="1"
+                  value={k.keyVelocity}
+                ></meter>
               </li>
             ))}
         </ul>
