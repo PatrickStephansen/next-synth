@@ -10,12 +10,14 @@ import {
 } from "@/lib/signal-chain";
 import { GainSetting } from "./gain-setting";
 import { Select, Option } from "./select";
+
 const waveFormOptions = [
   { displayName: "Sine", value: "sine" },
   { displayName: "Triangle", value: "triangle" },
   { displayName: "Square", value: "square" },
   { displayName: "Sawtooth", value: "sawtooth" },
 ] as Option[];
+
 export default function PolyPhonicMidiSynth() {
   const [oscillatorPool, setOscillatorPool] = useState([] as Voice[]);
   const [waveform, setWaveForm] = useState("sine");

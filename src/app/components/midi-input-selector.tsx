@@ -1,16 +1,11 @@
 import { MidiEvent, midiEventFromBytes } from "@/lib/midi-input";
-import {
-  handleMidiEvent,
-  startAudioContext,
-  stopAudioContext,
-} from "@/lib/signal-chain";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { handleMidiEvent } from "@/lib/signal-chain";
+import { useEffect, useMemo, useState } from "react";
 import { Select, Option } from "./select";
 
 export const MidiInputSelector = ({}) => {
   const [instruments, setInstruments] = useState([] as MIDIInput[]);
   const [selectedInstrumentId, setSelectedInstrumentId] = useState("");
-  const [inputChannel, setInputChannel] = useState(1);
   const [midiEvent, setMidiEvent] = useState({} as MidiEvent);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   useEffect(() => {
@@ -44,19 +39,13 @@ export const MidiInputSelector = ({}) => {
           (event as MIDIMessageEvent).data
         );
         setMidiEvent(parsedEvent);
-        handleMidiEvent(parsedEvent, inputChannel);
+        handleMidiEvent(parsedEvent);
       };
     setSelectedInstrumentId(id);
   };
 
   const selectInstrument = (value: string) => {
     selectInstrumentById(value, instruments);
-  };
-  const selectInputChannel = (e: ChangeEvent<HTMLInputElement>) => {
-    const inputValue = +e.target.value;
-    if (inputValue >= 1 && inputValue <= 16) {
-      setInputChannel(inputValue);
-    }
   };
   const instrumentOptions = useMemo(
     () => instruments.map((i) => ({ value: i.id, displayName: i.name })),
@@ -70,19 +59,6 @@ export const MidiInputSelector = ({}) => {
         value={selectedInstrumentId}
         options={instrumentOptions}
       />
-      <label>
-        Listen to channel:
-        <input
-          className="m-2 p-2 bg-black border rounded"
-          type="number"
-          name="inputChannel"
-          id="input-channel"
-          value={inputChannel}
-          min="1"
-          max="16"
-          onChange={selectInputChannel}
-        />
-      </label>
       <label>
         <input
           type="checkbox"

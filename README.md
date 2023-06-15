@@ -1,3 +1,7 @@
+# Next-Synth
+
+This is a polyphonic MIDI synthesizer that runs as a website. It's hosted on Vercel at <https://next-synth.vercel.app/>.
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

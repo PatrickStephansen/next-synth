@@ -126,12 +126,8 @@ export const startAudioContext = audioContext.resume.bind(audioContext);
 export const stopAudioContext = audioContext.suspend.bind(audioContext);
 
 export const handleMidiEvent = (
-  eventData: MidiEvent,
-  selectedMidiChannel: number
+  eventData: MidiEvent
 ) => {
-  if (eventData.channel != selectedMidiChannel) {
-    return;
-  }
   if (eventData.eventType === "noteOn") {
     const firstFreeOscillator =
       oscillatorPool.find((o) => !o.isBusy) ||
