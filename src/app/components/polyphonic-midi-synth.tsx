@@ -7,9 +7,12 @@ import {
   initializeSignalChain,
   setMasterGain,
   setOscillatorPoolWaveForm,
+  handleMidiEvent,
 } from "@/lib/signal-chain";
 import { GainSetting } from "./gain-setting";
 import { Select, Option } from "./select";
+import { MidiEvent } from "@/lib/midi-input";
+import { MidiInputDebugger } from "./midi-event-debugger";
 
 const waveFormOptions = [
   { displayName: "Sine", value: "sine" },
@@ -19,8 +22,10 @@ const waveFormOptions = [
 ] as Option[];
 
 export default function PolyPhonicMidiSynth() {
-  const [oscillatorPool, setOscillatorPool] = useState([] as Voice[]);
+  const [oscillatorPool, setOscillatorPool] = useState<Voice[]>([]);
   const [waveform, setWaveForm] = useState("sine");
+  const [latestMidiEvent, setLatestMidiEvent] = useState<MidiEvent>();
+  useState<boolean>(false);
   useEffect(() => {
     initializeSignalChain().then((op) => {
       setOscillatorPool(op);
@@ -33,9 +38,17 @@ export default function PolyPhonicMidiSynth() {
     },
     [setOscillatorPoolWaveForm, setWaveForm]
   );
+  const onMidiEvent = useCallback(
+    (midiEvent: MidiEvent) => {
+      handleMidiEvent(midiEvent);
+      setLatestMidiEvent(midiEvent);
+    },
+    [handleMidiEvent, setLatestMidiEvent]
+  );
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <MidiInputSelector />
+      <MidiInputSelector onMidiEvent={onMidiEvent} />
+
       <GainSetting setGain={setMasterGain} name="Master Gain" defaultGain={0} />
       <Select
         onChange={setOscillatorPoolWaveForms}
@@ -44,6 +57,7 @@ export default function PolyPhonicMidiSynth() {
         value={waveform}
       />
       <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
+      <MidiInputDebugger midiEvent={latestMidiEvent} />
     </main>
   );
 }
