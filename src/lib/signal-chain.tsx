@@ -29,6 +29,7 @@ export interface EnvelopState {
 
 export interface EnvelopeDetails {
   processingNode: AudioWorkletNode;
+  envelopeGain: GainNode;
   requestState: () => void;
   setEnvelopeStateUpdateCallback: (
     callback: (state: EnvelopState) => void
@@ -68,6 +69,7 @@ export const initializeSignalChain = async () => {
   for (let index = 0; index < OSCILLATOR_POOL_SIZE; index++) {
     const oscillator = new OscillatorNode(audioContext);
     const gain = new GainNode(audioContext, { gain: 0 });
+    const envelopeGain = new GainNode(audioContext, { gain: 0 });
     const envelopeGeneratorNode = new AudioWorkletNode(
       audioContext,
       "reactive-synth-envelope-generator",
@@ -91,16 +93,18 @@ export const initializeSignalChain = async () => {
     };
     oscillator.connect(gain);
     gain.connect(masterGain);
-    envelopeGeneratorNode.connect(gain.gain);
+    envelopeGeneratorNode.connect(envelopeGain);
+    envelopeGain.connect(gain.gain)
     oscillator.start();
     oscillatorPool.push({
       oscillator,
-      gain,
+      gain: gain,
       isBusy: false,
       lastInvocationTime: 0,
       envelopes: {
         gain: {
           processingNode: envelopeGeneratorNode,
+          envelopeGain,
           requestState: getState,
           setEnvelopeStateUpdateCallback: (
             callback: (state: EnvelopState) => void
@@ -144,6 +148,7 @@ export const handleMidiEvent = (
     firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("trigger")
       ?.setValueAtTime(1, 0);
+    firstFreeOscillator.envelopes.gain.envelopeGain.gain.setValueAtTime(eventData.velocity, 0);
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
@@ -180,5 +185,5 @@ export const setMasterGain = (gain: number) => {
 export const setOscillatorPoolWaveForm = (
   waveForm: string
 ) => {
-  oscillatorPool.forEach((o) => (o.oscillator.type = waveForm));
+  oscillatorPool.forEach((o) => (o.oscillator.type = (waveForm as OscillatorType)));
 };
