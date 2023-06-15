@@ -13,6 +13,7 @@ import { GainSetting } from "./gain-setting";
 import { Select, Option } from "./select";
 import { MidiEvent } from "@/lib/midi-input";
 import { MidiInputDebugger } from "./midi-event-debugger";
+import { MidiNotesVisualizer } from "./midi-notes-visualizer";
 
 const waveFormOptions = [
   { displayName: "Sine", value: "sine" },
@@ -40,7 +41,8 @@ export default function PolyPhonicMidiSynth() {
   );
   const onMidiEvent = useCallback(
     (midiEvent: MidiEvent) => {
-      handleMidiEvent(midiEvent);
+      const signalChainState = handleMidiEvent(midiEvent);
+      setOscillatorPool([...signalChainState.voices]);
       setLatestMidiEvent(midiEvent);
     },
     [handleMidiEvent, setLatestMidiEvent]
@@ -56,7 +58,10 @@ export default function PolyPhonicMidiSynth() {
         options={waveFormOptions}
         value={waveform}
       />
-      <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
+      <div className="grid grid-cols-2 gap-4 place-content-center">
+        <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
+        <MidiNotesVisualizer voices={oscillatorPool} />
+      </div>
       <MidiInputDebugger midiEvent={latestMidiEvent} />
     </main>
   );

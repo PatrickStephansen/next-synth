@@ -42,6 +42,7 @@ export interface Voice {
   isBusy: boolean;
   lastInvocationTime: number;
   note?: number;
+  keyVelocity: number;
   envelopes: { gain: EnvelopeDetails };
 }
 
@@ -101,6 +102,7 @@ export const initializeSignalChain = async () => {
       gain: gain,
       isBusy: false,
       lastInvocationTime: 0,
+      keyVelocity: 0,
       envelopes: {
         gain: {
           processingNode: envelopeGeneratorNode,
@@ -137,6 +139,7 @@ export const handleMidiEvent = (
     firstFreeOscillator.isBusy = true;
     firstFreeOscillator.lastInvocationTime = audioContext.currentTime;
     firstFreeOscillator.note = eventData.keyNumber;
+    firstFreeOscillator.keyVelocity = eventData.velocity;
     firstFreeOscillator.oscillator.detune.setValueAtTime(
       keyNumberToOffsetInCents(eventData?.keyNumber ?? 48),
       0
@@ -157,8 +160,10 @@ export const handleMidiEvent = (
       ringingNote.envelopes.gain.processingNode.parameters
         .get("trigger")
         ?.setValueAtTime(0, 0);
+      ringingNote.keyVelocity = 0;
     }
   }
+  return {voices: oscillatorPool};
 };
 
 export const setMasterGain = (gain: number) => {

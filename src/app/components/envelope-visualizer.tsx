@@ -9,8 +9,6 @@ interface KeyEnvelopState {
   stage: "rest" | "attack" | "hold" | "decay" | "sustain" | "release";
   stageProgress: number;
   totalProgress: number;
-  keyNumber: number;
-  noteName: string;
   outputVelocity: number;
   keyVelocity: number;
   key: string;
@@ -38,11 +36,9 @@ export const EnvelopeVisualizer = ({
     let keys = new Array(voices.length);
     voices.forEach((v, voiceIndex) =>
       v.envelopes[envelopeType].setEnvelopeStateUpdateCallback((state) => {
-        const keyState = {
+        const keyState: KeyEnvelopState = {
           stage: state.stage,
           stageProgress: state.stageProgress,
-          keyNumber: v.note,
-          noteName: v.note == null ? "no pitch" : keyNumberToNoteName(v.note),
           key: voiceIndex.toString(),
           outputVelocity: state.outputValue,
           keyVelocity: v.envelopes[envelopeType].envelopeGain.gain.value,
@@ -68,7 +64,7 @@ export const EnvelopeVisualizer = ({
                 1 +
                 state.stageProgress * state.parameters.releaseTime
               : -1,
-        } as KeyEnvelopState;
+        };
         // keys needs to be reassigned at least once in the loop for change detection to work, so we can't just set a specific elemement.
         keys = keys
           .slice(0, voiceIndex)
@@ -88,7 +84,7 @@ export const EnvelopeVisualizer = ({
   }, [voices, envelopeType]);
 
   return (
-    <div className="grid grid-cols-2 gap-4 place-content-center">
+    
       <svg
         version="1.2"
         viewBox={`0 0 ${
@@ -188,24 +184,5 @@ export const EnvelopeVisualizer = ({
             </g>
           ))}
       </svg>
-      <div>
-        <h2>Inputs</h2>
-        <ul>
-          {activeKeys
-            .filter((k) => k.stage !== "rest")
-            .map((k) => (
-              <li key={k.key}>
-                {k.keyNumber}: {k.noteName}
-                <meter
-                  className="mx-2 border rounded"
-                  min="0"
-                  max="1"
-                  value={k.keyVelocity}
-                ></meter>
-              </li>
-            ))}
-        </ul>
-      </div>
-    </div>
   );
 };
