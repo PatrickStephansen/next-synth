@@ -129,11 +129,9 @@ export const stopAudioContext = audioContext.suspend.bind(audioContext);
 
 export const handleMidiEvent = (eventData: MidiEvent) => {
   if (eventData.eventType === "noteOn") {
+    oscillatorPool.sort((a, b) => b.lastInvocationTime - a.lastInvocationTime);
     const firstFreeOscillator =
-      oscillatorPool.find((o) => !o.isBusy) ||
-      oscillatorPool.sort(
-        (a, b) => b.lastInvocationTime - a.lastInvocationTime
-      )[0];
+      oscillatorPool.find((o) => !o.isBusy) ?? oscillatorPool[0];
     firstFreeOscillator.isBusy = true;
     firstFreeOscillator.lastInvocationTime = audioContext.currentTime;
     firstFreeOscillator.note = eventData.keyNumber;
@@ -157,7 +155,7 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
     if (ringingNote) {
       setTimeout(() => {
         ringingNote.isBusy = false;
-      }, ringingNote.envelopes.gain.processingNode.parameters.get("release")?.value ?? 0 * 1000);
+      }, ringingNote.envelopes.gain.processingNode.parameters.get("releaseTime")?.value ?? 0);
       ringingNote.envelopes.gain.processingNode.parameters
         .get("trigger")
         ?.setValueAtTime(0, 0);
@@ -168,7 +166,7 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
     masterGain.gain.setValueAtTime(eventData.velocity, 0);
     return { masterGain: eventData.velocity };
   }
-  return {voices: oscillatorPool}
+  return { voices: oscillatorPool };
 };
 
 export const setMasterGain = (gain: number) => {

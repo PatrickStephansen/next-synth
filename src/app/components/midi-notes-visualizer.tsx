@@ -19,7 +19,7 @@ export const MidiNotesVisualizer = ({ voices: activeKeys }: Props) => {
                 className="mx-2 border rounded"
                 min="0"
                 max="1"
-                value={k.envelopes.gain.envelopeGain.gain.value}
+                value={k.keyVelocity}
               ></meter>
             </li>
           ))}

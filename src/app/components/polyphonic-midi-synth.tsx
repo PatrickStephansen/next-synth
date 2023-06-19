@@ -53,9 +53,12 @@ export default function PolyPhonicMidiSynth() {
       if (signalChainState?.masterGain !== undefined) {
         setMasterGainLevel(signalChainState.masterGain);
       }
+      if (signalChainState?.voices) {
+        setOscillatorPool(signalChainState.voices);
+      }
       setLatestMidiEvent(midiEvent);
     },
-    [handleMidiEvent, setLatestMidiEvent]
+    [handleMidiEvent, setLatestMidiEvent, setMasterGainLevel]
   );
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
