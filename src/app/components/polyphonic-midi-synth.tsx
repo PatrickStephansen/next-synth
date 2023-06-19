@@ -8,6 +8,7 @@ import {
   setMasterGain,
   setOscillatorPoolWaveForm,
   handleMidiEvent,
+  updateEnvelopeParameters,
 } from "@/lib/signal-chain";
 import { GainSetting } from "./gain-setting";
 import { Select, Option } from "./select";
@@ -76,7 +77,7 @@ export default function PolyPhonicMidiSynth() {
         value={waveform}
       />
       <div className="grid grid-cols-2 gap-4 place-content-center">
-        <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} />
+        <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} updateParameters={updateEnvelopeParameters}/>
         <MidiNotesVisualizer voices={oscillatorPool} />
       </div>
       <MidiInputDebugger midiEvent={latestMidiEvent} />

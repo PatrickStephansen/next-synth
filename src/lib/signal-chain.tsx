@@ -154,7 +154,9 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
-      .filter((o) => o.note == eventData.keyNumber && o.isBusy && !o.isReleasing)
+      .filter(
+        (o) => o.note == eventData.keyNumber && o.isBusy && !o.isReleasing
+      )
       .sort((a, b) => b.lastInvocationTime - a.lastInvocationTime)[0];
     if (ringingNote) {
       setTimeout(() => {
@@ -174,6 +176,27 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
   }
   return { voices: oscillatorPool };
 };
+
+export type EnvelopeParameter =
+  | "attackValue"
+  | "attackTime"
+  | "holdTime"
+  | "decayTime"
+  | "sustainValue"
+  | "releaseTime";
+export type ParameterMap = {
+  [Property in EnvelopeParameter]?: number;
+};
+export const updateEnvelopeParameters =
+  (envelopeType: keyof Voice["envelopes"]) => (parameters: ParameterMap) => {
+    Object.entries(parameters).forEach(([parameterName, parameterValue]) => {
+      oscillatorPool.forEach((voice) => {
+        voice.envelopes[envelopeType].processingNode.parameters
+          .get(parameterName)
+          ?.setValueAtTime(parameterValue, 0);
+      });
+    });
+  };
 
 export const setMasterGain = (gain: number) => {
   if (audioContext.state !== "running") {

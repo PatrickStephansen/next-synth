@@ -1,6 +1,6 @@
-import { keyNumberToNoteName } from "@/lib/midi-input";
-import { EnvelopeParameters, Voice } from "@/lib/signal-chain";
-import { useEffect, useState } from "react";
+import { EnvelopeParameters, ParameterMap, Voice } from "@/lib/signal-chain";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { NumberInput } from "./number-input";
 
 const height = 200;
 const width = 500;
@@ -14,13 +14,19 @@ interface KeyEnvelopState {
   key: string;
 }
 
+interface Props {
+  voices: Voice[];
+  envelopeType: "gain";
+  updateParameters: (
+    envelopeType: keyof Voice["envelopes"]
+  ) => (parameters: ParameterMap) => void;
+}
+
 export const EnvelopeVisualizer = ({
   voices,
   envelopeType,
-}: {
-  voices: Voice[];
-  envelopeType: "gain";
-}) => {
+  updateParameters,
+}: Props) => {
   const [envelopeParams, setEnvelopeParams] = useState({
     attackTime: 0.001,
     attackValue: 1,
@@ -31,6 +37,7 @@ export const EnvelopeVisualizer = ({
   } as EnvelopeParameters);
 
   const [activeKeys, setActiveKeys] = useState([] as KeyEnvelopState[]);
+  const envelopeElement = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     let keys = new Array(voices.length);
@@ -78,98 +85,88 @@ export const EnvelopeVisualizer = ({
     nextFrame();
   }, [voices, envelopeType]);
 
+  const attackPoint = {
+    x: envelopeParams.attackTime,
+    y: 1 - envelopeParams.attackValue,
+  };
+  const holdPoint = {
+    x: envelopeParams.attackTime + envelopeParams.holdTime,
+    y: 1 - envelopeParams.attackValue,
+  };
+  const decayPoint = {
+    x:
+      envelopeParams.attackTime +
+      envelopeParams.holdTime +
+      envelopeParams.decayTime,
+    y: 1 - envelopeParams.sustainValue,
+  };
+  const releasePoint = {
+    x:
+      envelopeParams.attackTime +
+      envelopeParams.holdTime +
+      envelopeParams.decayTime +
+      1,
+    y: 1 - envelopeParams.sustainValue,
+  };
+  const viewWidth =
+    envelopeParams.attackTime +
+    envelopeParams.holdTime +
+    envelopeParams.decayTime +
+    envelopeParams.releaseTime +
+    1;
+
   return (
-    
+    <div>
       <svg
         version="1.2"
-        viewBox={`0 0 ${
-          envelopeParams.attackTime +
-          envelopeParams.holdTime +
-          envelopeParams.decayTime +
-          envelopeParams.releaseTime +
-          1
-        } 1`}
+        viewBox={`0 0 ${viewWidth} 1`}
         height={height}
         width={width}
+        ref={envelopeElement}
       >
-        <line
+        <path
           className="stroke-white stroke-1"
           strokeLinecap="round"
           shapeRendering="crisp-edges"
           vectorEffect="non-scaling-stroke"
-          x1="0"
-          x2={envelopeParams.attackTime}
-          y1="1"
-          y2={1 - envelopeParams.attackValue}
-        ></line>
-        <line
+          d={`M0 1 L${attackPoint.x} ${attackPoint.y} L${holdPoint.x} ${holdPoint.y} L${decayPoint.x} ${decayPoint.y} L${releasePoint.x} ${releasePoint.y} L${viewWidth} 1`}
+        />
+        <circle
+          key="attack"
           className="stroke-white stroke-1"
-          strokeLinecap="round"
-          shapeRendering="crisp-edges"
           vectorEffect="non-scaling-stroke"
-          x1={envelopeParams.attackTime}
-          x2={envelopeParams.attackTime + envelopeParams.holdTime}
-          y1={1 - envelopeParams.attackValue}
-          y2={1 - envelopeParams.attackValue}
-        ></line>
-        <line
+          cx={attackPoint.x}
+          cy={attackPoint.y}
+          r="2%"
+        />
+        <circle
+          key="hold"
           className="stroke-white stroke-1"
-          strokeLinecap="round"
-          shapeRendering="crisp-edges"
           vectorEffect="non-scaling-stroke"
-          x1={envelopeParams.attackTime + envelopeParams.holdTime}
-          x2={
-            envelopeParams.attackTime +
-            envelopeParams.holdTime +
-            envelopeParams.decayTime
-          }
-          y1={1 - envelopeParams.attackValue}
-          y2={1 - envelopeParams.sustainValue}
-        ></line>
-        <line
+          cx={holdPoint.x}
+          cy={holdPoint.y}
+          r="2%"
+        />
+        <circle
+          key="decay"
           className="stroke-white stroke-1"
-          strokeLinecap="round"
-          shapeRendering="crisp-edges"
           vectorEffect="non-scaling-stroke"
-          x1={
-            envelopeParams.attackTime +
-            envelopeParams.holdTime +
-            envelopeParams.decayTime
-          }
-          x2={
-            envelopeParams.attackTime +
-            envelopeParams.holdTime +
-            envelopeParams.decayTime +
-            1
-          }
-          y1={1 - envelopeParams.sustainValue}
-          y2={1 - envelopeParams.sustainValue}
-        ></line>
-        <line
+          cx={decayPoint.x}
+          cy={decayPoint.y}
+          r="2%"
+        />
+        <circle
+          key="release"
           className="stroke-white stroke-1"
-          strokeLinecap="round"
-          shapeRendering="crisp-edges"
           vectorEffect="non-scaling-stroke"
-          x1={
-            envelopeParams.attackTime +
-            envelopeParams.holdTime +
-            envelopeParams.decayTime +
-            1
-          }
-          x2={
-            envelopeParams.attackTime +
-            envelopeParams.holdTime +
-            envelopeParams.decayTime +
-            1 +
-            envelopeParams.releaseTime
-          }
-          y1={1 - envelopeParams.sustainValue}
-          y2="1"
-        ></line>
+          cx={releasePoint.x}
+          cy={releasePoint.y}
+          r="2%"
+        />
         {activeKeys
           .filter((k) => k.stage !== "rest")
           .map((k) => (
-            <g key={k.key} className="stroke-white fill-white stroke-1">
+            <g key={k.key} className="stroke-cyan-500 fill-cyan-500 stroke-1">
               <circle
                 vectorEffect="non-scaling-stroke"
                 cx={k.totalProgress}
@@ -179,5 +176,76 @@ export const EnvelopeVisualizer = ({
             </g>
           ))}
       </svg>
+      <NumberInput
+        label="Attack Time"
+        value={envelopeParams.attackTime}
+        onChange={useCallback(
+          (e) =>
+            updateParameters(envelopeType)({ attackTime: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={10}
+        step={0.001}
+      />
+      <NumberInput
+        label="Attack Value"
+        value={envelopeParams.attackValue}
+        onChange={useCallback(
+          (e) =>
+            updateParameters(envelopeType)({ attackValue: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={1}
+        step={0.01}
+      />
+      <NumberInput
+        label="Hold Time"
+        value={envelopeParams.holdTime}
+        onChange={useCallback(
+          (e) => updateParameters(envelopeType)({ holdTime: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={10}
+        step={0.001}
+      />
+      <NumberInput
+        label="Decay Time"
+        value={envelopeParams.decayTime}
+        onChange={useCallback(
+          (e) => updateParameters(envelopeType)({ decayTime: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={10}
+        step={0.001}
+      />
+      <NumberInput
+        label="Sustain Value"
+        value={envelopeParams.sustainValue}
+        onChange={useCallback(
+          (e) =>
+            updateParameters(envelopeType)({ sustainValue: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={1}
+        step={0.01}
+      />
+      <NumberInput
+        label="Release Time"
+        value={envelopeParams.releaseTime}
+        onChange={useCallback(
+          (e) =>
+            updateParameters(envelopeType)({ releaseTime: +e.target.value }),
+          [updateParameters]
+        )}
+        min={0}
+        max={10}
+        step={0.001}
+      />
+    </div>
   );
 };
