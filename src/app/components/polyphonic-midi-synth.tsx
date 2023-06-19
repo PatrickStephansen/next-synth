@@ -26,6 +26,7 @@ export default function PolyPhonicMidiSynth() {
   const [oscillatorPool, setOscillatorPool] = useState<Voice[]>([]);
   const [waveform, setWaveForm] = useState("sine");
   const [latestMidiEvent, setLatestMidiEvent] = useState<MidiEvent>();
+  const [masterVolume, setMasterVolume] = useState<number>(0);
   useState<boolean>(false);
   useEffect(() => {
     initializeSignalChain().then((op) => {
@@ -39,10 +40,19 @@ export default function PolyPhonicMidiSynth() {
     },
     [setOscillatorPoolWaveForm, setWaveForm]
   );
+  const setMasterGainLevel = useCallback(
+    (gain: number) => {
+      setMasterGain(gain);
+      setMasterVolume(gain);
+    },
+    [setMasterGain, setMasterVolume]
+  );
   const onMidiEvent = useCallback(
     (midiEvent: MidiEvent) => {
       const signalChainState = handleMidiEvent(midiEvent);
-      setOscillatorPool([...signalChainState.voices]);
+      if (signalChainState?.masterGain !== undefined) {
+        setMasterGainLevel(signalChainState.masterGain);
+      }
       setLatestMidiEvent(midiEvent);
     },
     [handleMidiEvent, setLatestMidiEvent]
@@ -51,7 +61,11 @@ export default function PolyPhonicMidiSynth() {
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <MidiInputSelector onMidiEvent={onMidiEvent} />
 
-      <GainSetting setGain={setMasterGain} name="Master Gain" defaultGain={0} />
+      <GainSetting
+        setGain={setMasterGainLevel}
+        name="Master Gain"
+        value={masterVolume}
+      />
       <Select
         onChange={setOscillatorPoolWaveForms}
         label="Oscillator Waveform"

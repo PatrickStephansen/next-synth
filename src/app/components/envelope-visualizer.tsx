@@ -36,7 +36,7 @@ export const EnvelopeVisualizer = ({
     let keys = new Array(voices.length);
     voices.forEach((v, voiceIndex) =>
       v.envelopes[envelopeType].setEnvelopeStateUpdateCallback((state) => {
-        const keyState: KeyEnvelopState = {
+        keys[voiceIndex] = {
           stage: state.stage,
           stageProgress: state.stageProgress,
           key: voiceIndex.toString(),
@@ -64,12 +64,7 @@ export const EnvelopeVisualizer = ({
                 1 +
                 state.stageProgress * state.parameters.releaseTime
               : -1,
-        };
-        // keys needs to be reassigned at least once in the loop for change detection to work, so we can't just set a specific elemement.
-        keys = keys
-          .slice(0, voiceIndex)
-          .concat(keyState)
-          .concat(keys.slice(voiceIndex + 1));
+        } as KeyEnvelopState;
         if (voiceIndex === voices.length - 1) {
           setEnvelopeParams(state.parameters);
           setActiveKeys(keys);
