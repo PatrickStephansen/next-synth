@@ -11,7 +11,7 @@ export const MidiNotesVisualizer = ({ voices: activeKeys }: Props) => {
       <h2>Inputs</h2>
       <ul>
         {activeKeys
-          .filter((k) => k.isBusy)
+          .filter((k) => k.isBusy && !k.isReleasing)
           .map((k, i) => (
             <li key={i}>
               {k.note? `${k.note}: ${keyNumberToNoteName(k.note)}`: ``}

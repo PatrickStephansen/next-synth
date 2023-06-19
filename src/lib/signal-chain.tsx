@@ -40,6 +40,7 @@ export interface Voice {
   oscillator: OscillatorNode;
   gain: GainNode;
   isBusy: boolean;
+  isReleasing: boolean;
   lastInvocationTime: number;
   note?: number;
   keyVelocity: number;
@@ -101,6 +102,7 @@ export const initializeSignalChain = async () => {
       oscillator,
       gain: gain,
       isBusy: false,
+      isReleasing: false,
       lastInvocationTime: 0,
       keyVelocity: 0,
       envelopes: {
@@ -152,16 +154,18 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
-      .filter((o) => o.note == eventData.keyNumber)
+      .filter((o) => o.note == eventData.keyNumber && o.isBusy && !o.isReleasing)
       .sort((a, b) => b.lastInvocationTime - a.lastInvocationTime)[0];
     if (ringingNote) {
       setTimeout(() => {
         ringingNote.isBusy = false;
+        ringingNote.isReleasing = false;
       }, (ringingNote.envelopes.gain.processingNode.parameters.get("releaseTime")?.value ?? 0) * 1000);
       ringingNote.envelopes.gain.processingNode.parameters
         .get("trigger")
         ?.setValueAtTime(0, 0);
       ringingNote.keyVelocity = 0;
+      ringingNote.isReleasing = true;
     }
   }
   if (eventData.eventType === "volumeChange") {
