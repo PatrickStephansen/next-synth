@@ -22,6 +22,8 @@ interface Props {
   ) => (parameters: ParameterMap) => void;
 }
 
+type ControlPointActive = "none" | "attack" | "hold" | "decay" | "release";
+
 export const EnvelopeVisualizer = ({
   voices,
   envelopeType,
@@ -38,8 +40,11 @@ export const EnvelopeVisualizer = ({
 
   const [activeKeys, setActiveKeys] = useState([] as KeyEnvelopState[]);
   const envelopeElement = useRef<SVGSVGElement>(null);
+  const [controlPoint, setControlPoint] = useState<ControlPointActive>("none");
+  const [envelopeTypeDisplay, setEnvelopeTypeDisplay] = useState("");
 
   useEffect(() => {
+    setEnvelopeTypeDisplay(envelopeType.replace(/^./, (m) => m.toUpperCase()));
     let keys = new Array(voices.length);
     voices.forEach((v, voiceIndex) =>
       v.envelopes[envelopeType].setEnvelopeStateUpdateCallback((state) => {
@@ -83,7 +88,7 @@ export const EnvelopeVisualizer = ({
       requestAnimationFrame(nextFrame);
     };
     nextFrame();
-  }, [voices, envelopeType]);
+  }, [voices, envelopeType, setActiveKeys, setEnvelopeParams]);
 
   const attackPoint = {
     x: envelopeParams.attackTime,
@@ -115,14 +120,64 @@ export const EnvelopeVisualizer = ({
     envelopeParams.releaseTime +
     1;
 
+  const grabControlPoint = (controlPoint: ControlPointActive) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (envelopeElement.current) {
+      envelopeElement.current?.setPointerCapture(e.pointerId);
+    }
+    setControlPoint(controlPoint);
+  };
+
+  const releaseControlPoint = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    envelopeElement.current?.releasePointerCapture(e.pointerId);
+    setControlPoint("none");
+  };
+
+  const movePoint = (e) => {
+    switch (controlPoint) {
+      case "attack":
+        updateParameters(envelopeType)({
+          attackTime: +e.nativeEvent.offsetX / width,
+          attackValue: 1 - e.nativeEvent.offsetY / height,
+        });
+        break;
+      case "hold":
+        updateParameters(envelopeType)({
+          holdTime: e.nativeEvent.offsetX / width - attackPoint.x,
+          attackValue: 1 - e.nativeEvent.offsetY / height,
+        });
+        break;
+      case "decay":
+        updateParameters(envelopeType)({
+          decayTime: e.nativeEvent.offsetX / width - holdPoint.x,
+          sustainValue: 1 - e.nativeEvent.offsetY / height,
+        });
+        break;
+      case "release":
+        updateParameters(envelopeType)({
+          releaseTime: (width - e.nativeEvent.offsetX) / width,
+          sustainValue: 1 - e.nativeEvent.offsetY / height,
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div>
+      <h2>{envelopeTypeDisplay} Envelope</h2>
       <svg
         version="1.2"
         viewBox={`0 0 ${viewWidth} 1`}
         height={height}
         width={width}
         ref={envelopeElement}
+        onMouseUp={releaseControlPoint}
+        onMouseMove={movePoint}
       >
         <path
           className="stroke-white stroke-1"
@@ -138,6 +193,7 @@ export const EnvelopeVisualizer = ({
           cx={attackPoint.x}
           cy={attackPoint.y}
           r="2%"
+          onMouseDown={grabControlPoint("attack")}
         />
         <circle
           key="hold"
@@ -146,6 +202,7 @@ export const EnvelopeVisualizer = ({
           cx={holdPoint.x}
           cy={holdPoint.y}
           r="2%"
+          onMouseDown={grabControlPoint("hold")}
         />
         <circle
           key="decay"
@@ -154,6 +211,7 @@ export const EnvelopeVisualizer = ({
           cx={decayPoint.x}
           cy={decayPoint.y}
           r="2%"
+          onMouseDown={grabControlPoint("decay")}
         />
         <circle
           key="release"
@@ -162,6 +220,7 @@ export const EnvelopeVisualizer = ({
           cx={releasePoint.x}
           cy={releasePoint.y}
           r="2%"
+          onMouseDown={grabControlPoint("release")}
         />
         {activeKeys
           .filter((k) => k.stage !== "rest")
