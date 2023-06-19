@@ -1,6 +1,7 @@
 import { EnvelopeParameters, ParameterMap, Voice } from "@/lib/signal-chain";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NumberInput } from "./number-input";
+import { SvgControlHandle } from "./svg-control-handle";
 
 const height = 200;
 const width = 500;
@@ -120,46 +121,50 @@ export const EnvelopeVisualizer = ({
     envelopeParams.releaseTime +
     1;
 
-  const grabControlPoint = (controlPoint: ControlPointActive) => (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (envelopeElement.current) {
-      envelopeElement.current?.setPointerCapture(e.pointerId);
-    }
-    setControlPoint(controlPoint);
-  };
+  const grabControlPoint =
+    (controlPoint: ControlPointActive) =>
+    (event: PointerEvent<SVGCircleElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (envelopeElement.current) {
+        envelopeElement.current?.setPointerCapture(event.pointerId);
+      }
+      setControlPoint(controlPoint);
+    };
 
-  const releaseControlPoint = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    envelopeElement.current?.releasePointerCapture(e.pointerId);
+  const releaseControlPoint = (event: PointerEvent<SVGSVGElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    envelopeElement.current?.releasePointerCapture(event.pointerId);
     setControlPoint("none");
   };
 
-  const movePoint = (e) => {
+  const movePoint = (event: PointerEvent<SVGSVGElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     switch (controlPoint) {
       case "attack":
         updateParameters(envelopeType)({
-          attackTime: +e.nativeEvent.offsetX / width,
-          attackValue: 1 - e.nativeEvent.offsetY / height,
+          attackTime: +event.nativeEvent.offsetX / width,
+          attackValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "hold":
         updateParameters(envelopeType)({
-          holdTime: e.nativeEvent.offsetX / width - attackPoint.x,
-          attackValue: 1 - e.nativeEvent.offsetY / height,
+          holdTime: event.nativeEvent.offsetX / width - attackPoint.x,
+          attackValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "decay":
         updateParameters(envelopeType)({
-          decayTime: e.nativeEvent.offsetX / width - holdPoint.x,
-          sustainValue: 1 - e.nativeEvent.offsetY / height,
+          decayTime: event.nativeEvent.offsetX / width - holdPoint.x,
+          sustainValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "release":
         updateParameters(envelopeType)({
-          releaseTime: (width - e.nativeEvent.offsetX) / width,
-          sustainValue: 1 - e.nativeEvent.offsetY / height,
+          releaseTime: (width - event.nativeEvent.offsetX) / width,
+          sustainValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       default:
@@ -176,8 +181,9 @@ export const EnvelopeVisualizer = ({
         height={height}
         width={width}
         ref={envelopeElement}
-        onMouseUp={releaseControlPoint}
-        onMouseMove={movePoint}
+        onPointerUp={releaseControlPoint}
+        onPointerMove={movePoint}
+        className={controlPoint !== "none" ? "cursor-grabbing" : ""}
       >
         <path
           className="stroke-white stroke-1"
@@ -186,41 +192,29 @@ export const EnvelopeVisualizer = ({
           vectorEffect="non-scaling-stroke"
           d={`M0 1 L${attackPoint.x} ${attackPoint.y} L${holdPoint.x} ${holdPoint.y} L${decayPoint.x} ${decayPoint.y} L${releasePoint.x} ${releasePoint.y} L${viewWidth} 1`}
         />
-        <circle
+        <SvgControlHandle
           key="attack"
-          className="stroke-white stroke-1"
-          vectorEffect="non-scaling-stroke"
-          cx={attackPoint.x}
-          cy={attackPoint.y}
-          r="2%"
-          onMouseDown={grabControlPoint("attack")}
+          x={attackPoint.x}
+          y={attackPoint.y}
+          onGrab={grabControlPoint("attack")}
         />
-        <circle
+        <SvgControlHandle
           key="hold"
-          className="stroke-white stroke-1"
-          vectorEffect="non-scaling-stroke"
-          cx={holdPoint.x}
-          cy={holdPoint.y}
-          r="2%"
-          onMouseDown={grabControlPoint("hold")}
+          x={holdPoint.x}
+          y={holdPoint.y}
+          onGrab={grabControlPoint("hold")}
         />
-        <circle
+        <SvgControlHandle
           key="decay"
-          className="stroke-white stroke-1"
-          vectorEffect="non-scaling-stroke"
-          cx={decayPoint.x}
-          cy={decayPoint.y}
-          r="2%"
-          onMouseDown={grabControlPoint("decay")}
+          x={decayPoint.x}
+          y={decayPoint.y}
+          onGrab={grabControlPoint("decay")}
         />
-        <circle
+        <SvgControlHandle
           key="release"
-          className="stroke-white stroke-1"
-          vectorEffect="non-scaling-stroke"
-          cx={releasePoint.x}
-          cy={releasePoint.y}
-          r="2%"
-          onMouseDown={grabControlPoint("release")}
+          x={releasePoint.x}
+          y={releasePoint.y}
+          onGrab={grabControlPoint("release")}
         />
         {activeKeys
           .filter((k) => k.stage !== "rest")
