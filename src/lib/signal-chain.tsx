@@ -38,6 +38,7 @@ export interface EnvelopeDetails {
 
 export interface Voice {
   oscillator: OscillatorNode;
+  oscillatorPitchBend: ConstantSourceNode;
   gain: GainNode;
   isBusy: boolean;
   isReleasing: boolean;
@@ -72,6 +73,9 @@ export const initializeSignalChain = async () => {
     const oscillator = new OscillatorNode(audioContext);
     const gain = new GainNode(audioContext, { gain: 0 });
     const envelopeGain = new GainNode(audioContext, { gain: 0 });
+    const oscillatorPitchBend = new ConstantSourceNode(audioContext, {
+      offset: 0,
+    });
     const envelopeGeneratorNode = new AudioWorkletNode(
       audioContext,
       "reactive-synth-envelope-generator",
@@ -97,9 +101,12 @@ export const initializeSignalChain = async () => {
     gain.connect(masterGain);
     envelopeGeneratorNode.connect(envelopeGain);
     envelopeGain.connect(gain.gain);
+    oscillatorPitchBend.connect(oscillator.detune);
+    oscillatorPitchBend.start();
     oscillator.start();
     oscillatorPool.push({
       oscillator,
+      oscillatorPitchBend,
       gain: gain,
       isBusy: false,
       isReleasing: false,
@@ -169,6 +176,11 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
       ringingNote.keyVelocity = 0;
       ringingNote.isReleasing = true;
     }
+  }
+  if (eventData.eventType === "pitchBend") {
+    oscillatorPool.forEach((o) =>
+      o.oscillatorPitchBend.offset.setValueAtTime(eventData.velocity * 200, 0)
+    );
   }
   if (eventData.eventType === "volumeChange") {
     masterGain.gain.setValueAtTime(eventData.velocity, 0);
