@@ -3,12 +3,12 @@ import { ChangeEvent, useCallback } from "react";
 interface Props {
   setGain: (gain: number) => void;
   name: string;
-  defaultGain: number;
+  value: number;
 }
 
 const idFriendlyName = (name: string) => name.replace(/[^\w\d]/g, "-");
 
-export const GainSetting = ({ setGain, name, defaultGain }: Props) => (
+export const GainSetting = ({ setGain, name, value }: Props) => (
   <label className="flex items-center">
     {name}:
     <input
@@ -18,7 +18,7 @@ export const GainSetting = ({ setGain, name, defaultGain }: Props) => (
       min="0"
       max="1"
       list={idFriendlyName(name) + "-gain-list"}
-      defaultValue={defaultGain}
+      value={value}
       onChange={useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
           const numberValue = +e.target?.value;

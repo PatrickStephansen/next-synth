@@ -94,7 +94,7 @@ export const initializeSignalChain = async () => {
     oscillator.connect(gain);
     gain.connect(masterGain);
     envelopeGeneratorNode.connect(envelopeGain);
-    envelopeGain.connect(gain.gain)
+    envelopeGain.connect(gain.gain);
     oscillator.start();
     oscillatorPool.push({
       oscillator,
@@ -125,9 +125,7 @@ export const initializeSignalChain = async () => {
 export const startAudioContext = audioContext.resume.bind(audioContext);
 export const stopAudioContext = audioContext.suspend.bind(audioContext);
 
-export const handleMidiEvent = (
-  eventData: MidiEvent
-) => {
+export const handleMidiEvent = (eventData: MidiEvent) => {
   if (eventData.eventType === "noteOn") {
     const firstFreeOscillator =
       oscillatorPool.find((o) => !o.isBusy) ||
@@ -144,7 +142,10 @@ export const handleMidiEvent = (
     firstFreeOscillator.envelopes.gain.processingNode.parameters
       .get("trigger")
       ?.setValueAtTime(1, 0);
-    firstFreeOscillator.envelopes.gain.envelopeGain.gain.setValueAtTime(eventData.velocity, 0);
+    firstFreeOscillator.envelopes.gain.envelopeGain.gain.setValueAtTime(
+      eventData.velocity,
+      0
+    );
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
@@ -158,6 +159,10 @@ export const handleMidiEvent = (
         .get("trigger")
         ?.setValueAtTime(0, 0);
     }
+  }
+  if (eventData.eventType === "volumeChange") {
+    masterGain.gain.setValueAtTime(eventData.velocity, 0);
+    return { masterGain: eventData.velocity };
   }
 };
 
@@ -178,8 +183,8 @@ export const setMasterGain = (gain: number) => {
   );
 };
 
-export const setOscillatorPoolWaveForm = (
-  waveForm: string
-) => {
-  oscillatorPool.forEach((o) => (o.oscillator.type = (waveForm as OscillatorType)));
+export const setOscillatorPoolWaveForm = (waveForm: string) => {
+  oscillatorPool.forEach(
+    (o) => (o.oscillator.type = waveForm as OscillatorType)
+  );
 };
