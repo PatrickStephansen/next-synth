@@ -129,9 +129,11 @@ export const stopAudioContext = audioContext.suspend.bind(audioContext);
 
 export const handleMidiEvent = (eventData: MidiEvent) => {
   if (eventData.eventType === "noteOn") {
-    oscillatorPool.sort((a, b) => b.lastInvocationTime - a.lastInvocationTime);
     const firstFreeOscillator =
-      oscillatorPool.find((o) => !o.isBusy) ?? oscillatorPool[0];
+      oscillatorPool.find((o) => !o.isBusy) ??
+      oscillatorPool.sort(
+        (a, b) => b.lastInvocationTime - a.lastInvocationTime
+      )[0];
     firstFreeOscillator.isBusy = true;
     firstFreeOscillator.lastInvocationTime = audioContext.currentTime;
     firstFreeOscillator.note = eventData.keyNumber;
@@ -150,12 +152,12 @@ export const handleMidiEvent = (eventData: MidiEvent) => {
   }
   if (eventData.eventType === "noteOff") {
     const ringingNote = oscillatorPool
-      .sort((a, b) => b.lastInvocationTime - a.lastInvocationTime)
-      .find((o) => o.note == eventData.keyNumber);
+      .filter((o) => o.note == eventData.keyNumber)
+      .sort((a, b) => b.lastInvocationTime - a.lastInvocationTime)[0];
     if (ringingNote) {
       setTimeout(() => {
         ringingNote.isBusy = false;
-      }, ringingNote.envelopes.gain.processingNode.parameters.get("releaseTime")?.value ?? 0);
+      }, (ringingNote.envelopes.gain.processingNode.parameters.get("releaseTime")?.value ?? 0) * 1000);
       ringingNote.envelopes.gain.processingNode.parameters
         .get("trigger")
         ?.setValueAtTime(0, 0);
