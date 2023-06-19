@@ -12,7 +12,8 @@ export const GainSetting = ({ setGain, name, value }: Props) => (
   <label className="flex items-center">
     {name}:
     <input
-      className="m-2 p-2 border rounded bg-black"
+      className="m-2 p-2 border rounded accent-cyan-500"
+      title={value.toFixed(2)}
       type="range"
       step="0.01"
       min="0"

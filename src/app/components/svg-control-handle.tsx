@@ -8,7 +8,7 @@ interface Props {
 
 export const SvgControlHandle = ({ x, y, onGrab }: Props) => (
   <circle
-    className="stroke-white stroke-1 cursor-grab"
+    className="stroke-white stroke-1 cursor-grab hover:fill-cyan-500 active:fill-cyan-500"
     vectorEffect="non-scaling-stroke"
     cx={x}
     cy={y}

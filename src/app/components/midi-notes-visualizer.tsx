@@ -16,7 +16,7 @@ export const MidiNotesVisualizer = ({ voices: activeKeys }: Props) => {
             <li key={i} className="flex space-between">
               <div className="w-20 min-w-20">{k.note? `${k.note}: ${keyNumberToNoteName(k.note)}`: ``}</div>
               <meter
-                className="border rounded"
+                className="border rounded red"
                 min="0"
                 max="1"
                 value={k.keyVelocity}
