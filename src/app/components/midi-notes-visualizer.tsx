@@ -13,10 +13,10 @@ export const MidiNotesVisualizer = ({ voices: activeKeys }: Props) => {
         {activeKeys
           .filter((k) => k.isBusy && !k.isReleasing)
           .map((k, i) => (
-            <li key={i}>
-              {k.note? `${k.note}: ${keyNumberToNoteName(k.note)}`: ``}
+            <li key={i} className="flex space-between">
+              <div className="w-20 min-w-20">{k.note? `${k.note}: ${keyNumberToNoteName(k.note)}`: ``}</div>
               <meter
-                className="mx-2 border rounded"
+                className="border rounded"
                 min="0"
                 max="1"
                 value={k.keyVelocity}
