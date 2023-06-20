@@ -91,35 +91,29 @@ export const EnvelopeVisualizer = ({
     nextFrame();
   }, [voices, envelopeType, setActiveKeys, setEnvelopeParams]);
 
+  const viewWidth = width / height;
+  const totalSeconds = 42;
+  const secondsPerUnit = totalSeconds / viewWidth;
   const attackPoint = {
-    x: envelopeParams.attackTime,
+    x: envelopeParams.attackTime / secondsPerUnit,
     y: 1 - envelopeParams.attackValue,
   };
   const holdPoint = {
-    x: envelopeParams.attackTime + envelopeParams.holdTime,
+    x: (envelopeParams.attackTime + envelopeParams.holdTime) / secondsPerUnit,
     y: 1 - envelopeParams.attackValue,
   };
   const decayPoint = {
     x:
-      envelopeParams.attackTime +
-      envelopeParams.holdTime +
-      envelopeParams.decayTime,
+      (envelopeParams.attackTime +
+        envelopeParams.holdTime +
+        envelopeParams.decayTime) /
+      secondsPerUnit,
     y: 1 - envelopeParams.sustainValue,
   };
   const releasePoint = {
-    x:
-      envelopeParams.attackTime +
-      envelopeParams.holdTime +
-      envelopeParams.decayTime +
-      1,
+    x: (totalSeconds - envelopeParams.releaseTime) / secondsPerUnit,
     y: 1 - envelopeParams.sustainValue,
   };
-  const viewWidth =
-    envelopeParams.attackTime +
-    envelopeParams.holdTime +
-    envelopeParams.decayTime +
-    envelopeParams.releaseTime +
-    1;
 
   const grabControlPoint =
     (controlPoint: ControlPointActive) =>
@@ -145,25 +139,30 @@ export const EnvelopeVisualizer = ({
     switch (controlPoint) {
       case "attack":
         updateParameters(envelopeType)({
-          attackTime: +event.nativeEvent.offsetX / width,
+          attackTime: (totalSeconds * event.nativeEvent.offsetX) / width,
           attackValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "hold":
         updateParameters(envelopeType)({
-          holdTime: event.nativeEvent.offsetX / width - attackPoint.x,
+          holdTime:
+            (totalSeconds * event.nativeEvent.offsetX) / width -
+            attackPoint.x * secondsPerUnit,
           attackValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "decay":
         updateParameters(envelopeType)({
-          decayTime: event.nativeEvent.offsetX / width - holdPoint.x,
+          decayTime:
+            (totalSeconds * event.nativeEvent.offsetX) / width -
+            holdPoint.x * secondsPerUnit,
           sustainValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
       case "release":
         updateParameters(envelopeType)({
-          releaseTime: (width - event.nativeEvent.offsetX) / width,
+          releaseTime:
+            totalSeconds * ((width - event.nativeEvent.offsetX) / width),
           sustainValue: 1 - event.nativeEvent.offsetY / height,
         });
         break;
@@ -183,6 +182,7 @@ export const EnvelopeVisualizer = ({
         ref={envelopeElement}
         onPointerUp={releaseControlPoint}
         onPointerMove={movePoint}
+        preserveAspectRatio="xMidYMid meet"
         className={controlPoint !== "none" ? "cursor-grabbing" : ""}
       >
         <path
