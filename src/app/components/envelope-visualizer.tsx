@@ -2,9 +2,13 @@ import { EnvelopeParameters, ParameterMap, Voice } from "@/lib/signal-chain";
 import { PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NumberInput } from "./number-input";
 import { SvgControlHandle } from "./svg-control-handle";
+import { ControlHeading } from "./control-heading";
 
 const height = 200;
-const width = 500;
+const width = 800;
+const viewWidth = width / height;
+const totalSeconds = 22;
+const secondsPerUnit = totalSeconds / viewWidth;
 
 interface KeyEnvelopState {
   stage: "rest" | "attack" | "hold" | "decay" | "sustain" | "release";
@@ -69,13 +73,22 @@ export const EnvelopeVisualizer = ({
               ? state.parameters.attackTime +
                 state.parameters.holdTime +
                 state.parameters.decayTime +
-                state.stageProgress
+                state.stageProgress *
+                  (totalSeconds -
+                    (state.parameters.attackTime +
+                      state.parameters.holdTime +
+                      state.parameters.decayTime +
+                      state.parameters.releaseTime))
               : state.stage === "release"
               ? state.parameters.attackTime +
                 state.parameters.holdTime +
                 state.parameters.decayTime +
-                1 +
-                state.stageProgress * state.parameters.releaseTime
+                (totalSeconds -
+                  (state.parameters.attackTime +
+                    state.parameters.holdTime +
+                    state.parameters.decayTime +
+                    state.parameters.releaseTime)) +
+                state.parameters.releaseTime * state.stageProgress
               : -1,
         } as KeyEnvelopState;
         if (voiceIndex === voices.length - 1) {
@@ -91,9 +104,6 @@ export const EnvelopeVisualizer = ({
     nextFrame();
   }, [voices, envelopeType, setActiveKeys, setEnvelopeParams]);
 
-  const viewWidth = width / height;
-  const totalSeconds = 42;
-  const secondsPerUnit = totalSeconds / viewWidth;
   const attackPoint = {
     x: envelopeParams.attackTime / secondsPerUnit,
     y: 1 - envelopeParams.attackValue,
@@ -172,8 +182,8 @@ export const EnvelopeVisualizer = ({
   };
 
   return (
-    <div>
-      <h2>{envelopeTypeDisplay} Envelope</h2>
+    <div className="col-span-3">
+      <ControlHeading>{envelopeTypeDisplay} Envelope</ControlHeading>
       <svg
         version="1.2"
         viewBox={`0 0 ${viewWidth} 1`}
@@ -222,9 +232,9 @@ export const EnvelopeVisualizer = ({
             <g key={k.key} className="stroke-cyan-500 fill-cyan-500 stroke-1">
               <circle
                 vectorEffect="non-scaling-stroke"
-                cx={k.totalProgress}
+                cx={k.totalProgress / secondsPerUnit}
                 cy={1 - k.outputVelocity}
-                r="2%"
+                r="1%"
               />
             </g>
           ))}
@@ -238,7 +248,7 @@ export const EnvelopeVisualizer = ({
           [updateParameters]
         )}
         min={0}
-        max={10}
+        max={5}
         step={0.001}
       />
       <NumberInput
@@ -261,7 +271,7 @@ export const EnvelopeVisualizer = ({
           [updateParameters]
         )}
         min={0}
-        max={10}
+        max={5}
         step={0.001}
       />
       <NumberInput
@@ -272,7 +282,7 @@ export const EnvelopeVisualizer = ({
           [updateParameters]
         )}
         min={0}
-        max={10}
+        max={5}
         step={0.001}
       />
       <NumberInput
@@ -296,7 +306,7 @@ export const EnvelopeVisualizer = ({
           [updateParameters]
         )}
         min={0}
-        max={10}
+        max={5}
         step={0.001}
       />
     </div>

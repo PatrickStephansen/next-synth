@@ -1,4 +1,5 @@
 "use client";
+import { clamp } from "./clamp";
 // for one key:
 // oscillator with gain, pitch, bitcrusher, filter envelopes and lfos
 // bitcrusher and pitch can perhaps be shared rather than per-channel
@@ -199,13 +200,14 @@ export type EnvelopeParameter =
 export type ParameterMap = {
   [Property in EnvelopeParameter]?: number;
 };
+const clampEnvelopePhase = clamp(0, 5);
 export const updateEnvelopeParameters =
   (envelopeType: keyof Voice["envelopes"]) => (parameters: ParameterMap) => {
     Object.entries(parameters).forEach(([parameterName, parameterValue]) => {
       oscillatorPool.forEach((voice) => {
         voice.envelopes[envelopeType].processingNode.parameters
           .get(parameterName)
-          ?.setValueAtTime(parameterValue, 0);
+          ?.setValueAtTime(clampEnvelopePhase(parameterValue), 0);
       });
     });
   };

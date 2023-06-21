@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const NumberInput = ({ label, value, onChange, step, min, max }: Props) => (
-  <label className="flex items-center">
+  <label className="flex items-center justify-between">
     {label}
     <input
       className="rounded border m-2 accent-cyan-500"

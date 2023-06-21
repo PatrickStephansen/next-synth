@@ -76,7 +76,7 @@ export default function PolyPhonicMidiSynth() {
         options={waveFormOptions}
         value={waveform}
       />
-      <div className="grid grid-cols-2 gap-4 place-content-center">
+      <div className="grid grid-cols-4 gap-4 place-content-center">
         <EnvelopeVisualizer envelopeType="gain" voices={oscillatorPool} updateParameters={updateEnvelopeParameters}/>
         <MidiNotesVisualizer voices={oscillatorPool} />
       </div>

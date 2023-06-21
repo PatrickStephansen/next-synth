@@ -1,5 +1,6 @@
 import { keyNumberToNoteName } from "@/lib/midi-input";
 import { Voice } from "@/lib/signal-chain";
+import { ControlHeading } from "./control-heading";
 
 interface Props {
   voices: Voice[];
@@ -7,8 +8,8 @@ interface Props {
 
 export const MidiNotesVisualizer = ({ voices: activeKeys }: Props) => {
   return (
-    <div>
-      <h2>Inputs</h2>
+    <div className="col-span-1">
+      <ControlHeading>Inputs</ControlHeading>
       <ul>
         {activeKeys
           .filter((k) => k.isBusy && !k.isReleasing)

@@ -12,7 +12,7 @@ export const SvgControlHandle = ({ x, y, onGrab }: Props) => (
     vectorEffect="non-scaling-stroke"
     cx={x}
     cy={y}
-    r="3%"
+    r="2%"
     onPointerDown={onGrab}
   />
 );
